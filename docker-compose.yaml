@@ -31,13 +31,15 @@ services:
                         - my_network
 
         streaming-scraper:
+	        container_name: streaming-scraper
                 build:
                         dockerfile: Dockerfile
                         context: ./streaming-scraper
                 networks: 
                         - my_network
         
-        face_recognizer:
+        face-recognizer:
+	        container_name: face-recognizer
                 build:
                         dockerfile: Dockerfile
                         context: ./szymon_service
