@@ -12,6 +12,8 @@ cmake = "*"
 face-recognition = "*"
 kafka-python = "*"
 opencv-python = "*"
+requests = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.8"

@@ -4,6 +4,6 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY ./producer.py .
-COPY ./Jakto.jpg .
-CMD [ "python", "./producer.py" ]
+COPY ./StreamingScraper.py .
+
+CMD [ "python", "./StreamingScraper.py" ]

@@ -31,18 +31,24 @@ services:
                         - my_network
 
         streaming-scraper:
-	        container_name: streaming-scraper
+                container_name: streaming-scraper
                 build:
                         dockerfile: Dockerfile
                         context: ./streaming-scraper
+                depends_on:
+                        - kafka
+                tty: true
                 networks: 
                         - my_network
         
         face-recognizer:
-	        container_name: face-recognizer
+                container_name: face-recognizer
                 build:
                         dockerfile: Dockerfile
-                        context: ./szymon_service
+                        context: ./face-recognizer
+                depends_on:
+                        - kafka
+                tty: true
                 networks: 
                                 - my_network
         

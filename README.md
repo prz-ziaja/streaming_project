@@ -1,8 +1,8 @@
 # streaming_project
-How to start?
-Install docker and docker-compose
-execute commands:
-	docker-compose build
-	docker-compose up -d
-After a minute you can check results by following command
-	docker logs face-recognizer
+How to start?  
+Install docker and docker-compose  
+execute commands:  
+	docker-compose build  
+	docker-compose up -d  
+You can check progress by executing:  
+	docker logs --follow face-recognizer
