@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM jjanzic/docker-python3-opencv
 
 COPY requirements.txt .
 

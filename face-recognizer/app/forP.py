@@ -4,6 +4,7 @@ from kafka import KafkaConsumer
 from json import loads
 import pickle
 import logging
+import time
 
 
 
@@ -11,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-
+time.sleep(30)
 logging.info('start face-recognizer')
 def image_search(img):
     # Wczytuje obraz
@@ -29,8 +30,7 @@ consumer = KafkaConsumer(
     'topic_test',
     bootstrap_servers=['kafka:9093'],
     auto_offset_reset='earliest',
-    enable_auto_commit=True,
-    group_id='my-group-id'
+    enable_auto_commit=True
 )
 
 for event in consumer:

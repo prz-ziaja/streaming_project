@@ -9,6 +9,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
+time.sleep(30)
 class StreamingScraper(object):
     def __init__(self):
         with open("scraper_config.yaml") as yaml_file:
