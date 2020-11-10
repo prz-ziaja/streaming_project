@@ -41,16 +41,20 @@ services:
                 networks: 
                         - my_network
         
-        face-recognizer:
-                container_name: face-recognizer
+        car-recognizer:
+                container_name: car-recognizer
                 build:
                         dockerfile: Dockerfile
-                        context: ./face-recognizer
+                        context: ./car-rec
                 depends_on:
                         - kafka
+                volumes:
+                        - ./car-rec/app:/app/
                 tty: true
+                working_dir: /app/
+                command: python3 car_rec.py
                 networks: 
-                                - my_network
+                        - my_network
         
 
 

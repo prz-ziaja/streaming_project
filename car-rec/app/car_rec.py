@@ -1,13 +1,17 @@
 import numpy as np
 import cv2
-import os
-from tabulate import tabulate
+# import os
+# from tabulate import tabulate
 import classifier
+from PIL import Image
+from kafka import KafkaConsumer
+from json import loads
+import pickle
+import logging
+import time
 
 
-#imgs = "104.jpg"
-
-def car_rec(img,confidence=0.5,threshold=0.3):
+def car_rec(image,confidence=0.5,threshold=0.3):
 
    car_color_classifier = classifier.Classifier()
 
@@ -20,7 +24,7 @@ def car_rec(img,confidence=0.5,threshold=0.3):
    net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
    # load our input image and grab its spatial dimensions
-   image = cv2.imread(img)
+
    (H, W) = image.shape[:2]
 
    # determine only the output layer names that we need from YOLO
@@ -112,5 +116,14 @@ def car_rec(img,confidence=0.5,threshold=0.3):
 
    return(results)
 
+consumer = KafkaConsumer(
+    'topic_test',
+    bootstrap_servers=['kafka:9093'],
+    auto_offset_reset='earliest',
+    enable_auto_commit=True
+)
 
-#car_rec(imgs)
+for event in consumer:
+   data = event.value
+   timestamp, image = pickle.loads(data)
+   print(car_rec(image))

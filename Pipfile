@@ -14,6 +14,7 @@ kafka-python = "*"
 opencv-python = "*"
 requests = "*"
 pyyaml = "*"
+tensorflow = "*"
 
 [requires]
 python_version = "3.8"
