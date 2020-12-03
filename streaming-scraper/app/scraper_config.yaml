@@ -1,3 +1,3 @@
 config_dictionary:
-  url: "http://live.uci.agh.edu.pl/video/stream3.cgi?"
-  sample_freq_Hz: 1
+  url: "https://youtu.be/1EiC9bvVGnk"
+  sample_freq_Hz: 0.1

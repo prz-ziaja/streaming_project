@@ -10,6 +10,8 @@ import pickle
 import logging
 import time
 
+time.sleep(10)
+print('--------------------------------------')
 
 def car_rec(image,confidence=0.5,threshold=0.3):
 
@@ -117,7 +119,7 @@ def car_rec(image,confidence=0.5,threshold=0.3):
    return(results)
 
 consumer = KafkaConsumer(
-    'topic_test',
+    'topictest',
     bootstrap_servers=['kafka:9093'],
     auto_offset_reset='earliest',
     enable_auto_commit=True
