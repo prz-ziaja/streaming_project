@@ -64,15 +64,29 @@ services:
                 restart: always
                 networks: 
                         - my_network
-     
+                        
+        mongo1:
+                container_name: mongo1
+                image: mongo:4.4.2-bionic
+                environment: 
+                        MONGO_INITDB_ROOT_USERNAME: root
+                        MONGO_INITDB_ROOT_PASSWORD: pass
+                        MONGO_INITDB_ROOT_DATABASE: root-db
+                volumes:
+                        - ./mongo/rs1/db:/data/db
+                        - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+                networks:
+                        - my_network
 
+                ports:
+                        - 27017:27017
+
+                restart: always
+
+ 
 
 networks:
         my_network:
                 external: true
 
-#volumes:
-#  rs1: 
-#  rs2: 
-#  rs3: 
 
