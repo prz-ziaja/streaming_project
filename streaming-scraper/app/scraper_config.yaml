@@ -1,3 +1,6 @@
 config_dictionary:
   url: "https://youtu.be/1EiC9bvVGnk"
   sample_freq_Hz: 0.1
+  mongo_database: "api_dev_db"
+  mongo_user: "backend_user"
+  mongo_password: "papay"
