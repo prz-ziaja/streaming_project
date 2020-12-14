@@ -23,10 +23,30 @@ services:
                         KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
                         KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
                         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+                        KAFKA_LOG_RETENTION_MS: 3000
                         KAFKA_CREATE_TOPICS: topictest:1:1
                 volumes:
                         - /var/run/docker.sock:/var/run/docker.sock
                 networks:
+                        - my_network
+
+        api:
+                container_name: api
+                build:
+                        dockerfile: Dockerfile
+                        context: ./api
+
+                depends_on:
+                        - mongo1
+
+                tty: true
+                volumes:
+                        - ./api/app:/app/
+
+                working_dir: /app/
+                command: python3 main.py
+                restart: always
+                networks: 
                         - my_network
 
         streaming-scraper:
@@ -37,7 +57,7 @@ services:
 
                 depends_on:
                         - kafka
-
+                        - mongo1
                 tty: true
                 volumes:
                         - ./streaming-scraper/app:/app/

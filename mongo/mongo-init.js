@@ -25,8 +25,7 @@ db.createUser(
 db.createCollection( 'photos',
     {
       autoIndexId: true,
-      size: 1024,
+      size: 4000000000,
       capped: true
     }
  );
- db.photos.insert([{'test':1}])

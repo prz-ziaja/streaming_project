@@ -4,3 +4,4 @@ config_dictionary:
   mongo_database: "api_dev_db"
   mongo_user: "backend_user"
   mongo_password: "papay"
+  collection: "photos"
