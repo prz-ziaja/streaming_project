@@ -67,6 +67,32 @@ from flask import (
     session,
     url_for
 )
+import os
+import pymongo
+import sys
+import yaml
+import logging
+import pickle
+from PIL import Image as im 
+
+with open("api_config.yaml") as yaml_file:
+   config_dict = yaml.load(yaml_file)["config_dictionary"]
+
+db = pymongo.MongoClient(
+            'mongo1:27017',
+            username=config_dict['mongo_user'],
+            password=config_dict['mongo_password'],
+            authSource=config_dict['mongo_database'],
+            authMechanism='SCRAM-SHA-256')[config_dict['mongo_database']]
+try:
+    db.list_collections()
+except Exception as e:
+    logging.error(f"Problem with connection to MongoDB\n{e.args}")
+    sys.exit(2)
+
+collection_photos = db[config_dict['collection_photos']]
+collection_labels = db[config_dict['collection_labels']]
+
 
 class User:
     def __init__(self, id, username, password):
@@ -112,12 +138,30 @@ def login():
 
     return render_template('login.html')
 
-@app.route('/profile')
-def profile():
+@app.route('/find_by_tag')
+def empty_find_by_tag():
+    return redirect('/find_by_tag/0')
+
+@app.route('/find_by_tag/<name>')
+def profile(name):
     if not g.user:
         return redirect(url_for('login'))
 
-    return render_template('profile.html')
+    return render_template("my_response.html", data=name)
+
+@app.route('/goto', methods=['POST', 'GET'])    
+def goto():
+    text = request.form['index']
+    print(text)
+    labels = [x.strip() for x in text.split(',')]
+    found = collection_labels.find_one({'labels':{"$elemMatch":{"$elemMatch":{"$in":labels}}}})
+    photo = pickle.loads(collection_photos.find_one({"id":found['id']})['photo'])
+    print(found['id'])
+    photo = im.fromarray(photo)
+    b, g, r = photo.split()
+    photo = im.merge("RGB", (r, g, b))
+    photo.save(f'static/images/{found["id"]}.png')
+    return redirect(f'/find_by_tag/{found["id"]}',)
 
 with open('/etc/hostname','r') as f:
     hostname = f.read().strip()
