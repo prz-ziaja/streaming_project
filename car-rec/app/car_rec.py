@@ -9,6 +9,9 @@ from json import loads
 import pickle
 import logging
 import time
+import pymongo
+import sys
+import yaml
 
 time.sleep(10)
 print('--------------------------------------')
@@ -125,7 +128,28 @@ consumer = KafkaConsumer(
     enable_auto_commit=True
 )
 
+with open("car_rec_config.yaml") as yaml_file:
+   config_dict = yaml.load(yaml_file)["config_dictionary"]
+
+db = pymongo.MongoClient(
+            'mongo1:27017',
+            username=config_dict['mongo_user'],
+            password=config_dict['mongo_password'],
+            authSource=config_dict['mongo_database'],
+            authMechanism='SCRAM-SHA-256')[config_dict['mongo_database']]
+
+try:
+   db.list_collections()
+except Exception as e:
+   logging.error(f"Problem with connection to MongoDB\n{e.args}")
+   sys.exit(2)
+collection_import = db[config_dict['collection_photos']]
+collection_export = db[config_dict['collection_labels']]
+
 for event in consumer:
    data = event.value
-   timestamp, image = pickle.loads(data)
-   print(car_rec(image))
+   id, timestamp = pickle.loads(data)
+   record = collection_import.find_one({'id':id})
+   image = pickle.loads(record['photo'])
+   labels = car_rec(image)
+   collection_export.insert({'id':id,'timestamp':timestamp,"labels":labels,"comments":[]})

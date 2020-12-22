@@ -60,8 +60,8 @@ class StreamingScraper(object):
                     image = cv2.resize(image, (1280,720))
                     id = str(int(timestamp))+f'_{np.random.randint(999):0=3d}'
                     msg = pickle.dumps((id,timestamp))
-                    self.producer.send('topictest', msg)
                     self.collection.insert({'id':id,'timestamp':timestamp,'photo':pickle.dumps(image)})
+                    self.producer.send('topictest', msg)
                     logging.info('Frame captured and sent')
                 capture_time=self.sample_period+time.time()
 

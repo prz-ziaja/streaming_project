@@ -38,7 +38,8 @@ services:
 
                 depends_on:
                         - mongo1
-
+                ports:
+                        - 8880:8880
                 tty: true
                 volumes:
                         - ./api/app:/app/

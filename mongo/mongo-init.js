@@ -4,7 +4,7 @@ db.createUser(
     {
         user: 'api_user',
         pwd: 'raspberry',
-        roles: [{role: 'read',db:'api_dev_db'}]
+        roles: [{role: 'readWrite',db:'api_dev_db'}]
     }
 );
 db.createUser(
@@ -27,5 +27,11 @@ db.createCollection( 'photos',
       autoIndexId: true,
       size: 4000000000,
       capped: true
+    }
+ );
+
+ db.createCollection( 'labels_comments',
+    {
+      autoIndexId: true,
     }
  );
