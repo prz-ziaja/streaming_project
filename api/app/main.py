@@ -67,6 +67,7 @@ from flask import (
     session,
     url_for
 )
+from pager import Pager
 import os
 import pymongo
 import sys
@@ -74,6 +75,7 @@ import yaml
 import logging
 import pickle
 from PIL import Image as im 
+import json
 
 with open("api_config.yaml") as yaml_file:
    config_dict = yaml.load(yaml_file)["config_dictionary"]
@@ -93,6 +95,7 @@ except Exception as e:
 collection_photos = db[config_dict['collection_photos']]
 collection_labels = db[config_dict['collection_labels']]
 
+user_history = {}
 
 class User:
     def __init__(self, id, username, password):
@@ -138,30 +141,48 @@ def login():
 
     return render_template('login.html')
 
+
+
 @app.route('/find_by_tag')
 def empty_find_by_tag():
-    return redirect('/find_by_tag/0')
+    return redirect('/find_by_tag/mooncake')
 
-@app.route('/find_by_tag/<name>')
-def profile(name):
-    if not g.user:
+@app.route('/find_by_tag/<index>')
+def profile(index):
+    user = g.user
+    if not user:
         return redirect(url_for('login'))
+    user='test'
+    if index == 'mooncake':
+        return render_template("my_response.html", data="mooncake",
+        next_pic=f"mooncake",
+        previous_pic=f"mooncake",
+        user=user)
+    index = int(index)
+    name = user_history[user][index]
+    return render_template("my_response.html", data=name,
+        next_pic=f"{(index-1)%len(user_history[user])}",
+        previous_pic=f"{(index+1)%len(user_history[user])}",
+        user=user)
 
-    return render_template("my_response.html", data=name)
-
-@app.route('/goto', methods=['POST', 'GET'])    
-def goto():
+@app.route('/goto/<user>', methods=['POST', 'GET'])    
+def goto(user):
+    if not user:
+        return redirect(url_for('login'))
+    user_history[user]=[]
     text = request.form['index']
     print(text)
     labels = [x.strip() for x in text.split(',')]
-    found = collection_labels.find_one({'labels':{"$elemMatch":{"$elemMatch":{"$in":labels}}}})
-    photo = pickle.loads(collection_photos.find_one({"id":found['id']})['photo'])
-    print(found['id'])
-    photo = im.fromarray(photo)
-    b, g, r = photo.split()
-    photo = im.merge("RGB", (r, g, b))
-    photo.save(f'static/images/{found["id"]}.png')
-    return redirect(f'/find_by_tag/{found["id"]}',)
+    found = [*collection_labels.find({'labels':{"$elemMatch":{"$elemMatch":{"$in":labels}}}})]
+    print(found)
+    for i in found:
+        photo = pickle.loads(collection_photos.find_one({"id":i['id']})['photo'])
+        photo = im.fromarray(photo)
+        b, g, r = photo.split()
+        photo = im.merge("RGB", (r, g, b))
+        photo.save(f'static/images/{i["id"]}.png')
+        user_history[user].append(i["id"])
+    return redirect(f'/find_by_tag/0',)
 
 with open('/etc/hostname','r') as f:
     hostname = f.read().strip()
