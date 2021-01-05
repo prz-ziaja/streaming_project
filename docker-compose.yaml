@@ -11,7 +11,7 @@ services:
         kafka:
                 image: wurstmeister/kafka
                 container_name: kafka
-                depends_on:
+                depends_on: 
                         - zookeeper
                 ports:
                         - 9092:9092
@@ -24,10 +24,30 @@ services:
                         KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
                         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
                         KAFKA_LOG_RETENTION_MS: 3000
-                        KAFKA_CREATE_TOPICS: topic_test:1:1
+                        KAFKA_CREATE_TOPICS: topictest:1:1
                 volumes:
                         - /var/run/docker.sock:/var/run/docker.sock
                 networks:
+                        - my_network
+
+        api:
+                container_name: api
+                build:
+                        dockerfile: Dockerfile
+                        context: ./api
+
+                depends_on:
+                        - mongo1
+                ports:
+                        - 8880:8880
+                tty: true
+                volumes:
+                        - ./api/app:/app/
+
+                working_dir: /app/
+                command: python3 main.py
+                restart: always
+                networks: 
                         - my_network
 
         streaming-scraper:
@@ -35,9 +55,17 @@ services:
                 build:
                         dockerfile: Dockerfile
                         context: ./streaming-scraper
+
                 depends_on:
                         - kafka
+                        - mongo1
                 tty: true
+                volumes:
+                        - ./streaming-scraper/app:/app/
+
+                working_dir: /app/
+                command: python3 StreamingScraper.py
+                restart: always
                 networks: 
                         - my_network
         
@@ -46,18 +74,41 @@ services:
                 build:
                         dockerfile: Dockerfile
                         context: ./car-rec
+
                 depends_on:
                         - kafka
+
                 volumes:
                         - ./car-rec/app:/app/
+
                 tty: true
                 working_dir: /app/
                 command: python3 car_rec.py
+                restart: always
                 networks: 
                         - my_network
-        
+                        
+        mongo1:
+                container_name: mongo1
+                image: mongo:4.4.2-bionic
+                environment: 
+                        MONGO_INITDB_ROOT_USERNAME: root
+                        MONGO_INITDB_ROOT_PASSWORD: pass
+                        MONGO_INITDB_ROOT_DATABASE: root-db
+                volumes:
+                        - ./mongo/rs1/db:/data/db
+                        - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+                networks:
+                        - my_network
 
+                ports:
+                        - 27017:27017
+
+                restart: always
+
+ 
 
 networks:
         my_network:
                 external: true
+
