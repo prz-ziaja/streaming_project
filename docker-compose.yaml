@@ -8,6 +8,7 @@ services:
                         - 2181:2181
                 networks:
                         - my_network
+
         kafka:
                 image: wurstmeister/kafka
                 container_name: kafka
@@ -35,7 +36,6 @@ services:
                 build:
                         dockerfile: Dockerfile
                         context: ./api
-
                 depends_on:
                         - mongo1
                 ports:
@@ -43,11 +43,28 @@ services:
                 tty: true
                 volumes:
                         - ./api/app:/app/
-
                 working_dir: /app/
                 command: python3 main.py
                 restart: always
                 networks: 
+                        - my_network
+
+        api2:
+                container_name: api2
+                build:
+                        dockerfile: Dockerfile
+                        context: ./api2
+                depends_on:
+                        - mysql-db
+                ports:
+                        - 80:80
+                tty: true
+                volumes:
+                        - ./api2/app:/app/
+                working_dir: /app/
+                command: python3 main.py
+                restart: always
+                networks:
                         - my_network
 
         streaming-scraper:
@@ -55,14 +72,12 @@ services:
                 build:
                         dockerfile: Dockerfile
                         context: ./streaming-scraper
-
                 depends_on:
                         - kafka
                         - mongo1
                 tty: true
                 volumes:
                         - ./streaming-scraper/app:/app/
-
                 working_dir: /app/
                 command: python3 StreamingScraper.py
                 restart: always
@@ -74,13 +89,10 @@ services:
                 build:
                         dockerfile: Dockerfile
                         context: ./car-rec
-
                 depends_on:
                         - kafka
-
                 volumes:
                         - ./car-rec/app:/app/
-
                 tty: true
                 working_dir: /app/
                 command: python3 car_rec.py
@@ -100,15 +112,26 @@ services:
                         - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
                 networks:
                         - my_network
-
                 ports:
                         - 27017:27017
-
                 restart: always
 
- 
+        mysql-db:
+                container_name: mysql-db
+                image: mysql:5.7
+                ports:
+                        - "3306:3306"
+                networks:
+                        - my_network
+                volumes:
+                        - ./mysql-db/:/docker-entrypoint-initdb.d
+                restart: always
+                environment:
+                        MYSQL_ROOT_PASSWORD: toor
+                        MYSQL_DATABASE: users
+                        MYSQL_USER: admin
+                        MYSQL_PASSWORD: admin
 
 networks:
         my_network:
                 external: true
-
