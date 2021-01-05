@@ -7,12 +7,9 @@ import pickle
 from PIL import Image as im 
 import io
 import base64
-
 app = Flask(__name__)
-
 with open("api_config.yaml") as yaml_file:
    config_dict = yaml.load(yaml_file)["config_dictionary"]
-
 db = pymongo.MongoClient(
             'mongo1:27017',
             username=config_dict['mongo_user'],
@@ -24,14 +21,11 @@ try:
 except Exception as e:
     logging.error(f"Problem with connection to MongoDB\n{e.args}")
     sys.exit(2)
-
 collection_photos = db[config_dict['collection_photos']]
 collection_labels = db[config_dict['collection_labels']]
-
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
-
 @app.route('/find_by_tag', methods=['GET','POST'])
 def my_form_post():
     if request.method == "GET":
@@ -48,13 +42,9 @@ def my_form_post():
         photo.save(data, "JPEG")
         data64 = base64.b64encode(data.getvalue())
         return render_template("my_response.html", picture=data, tags=str(found))
-
 #db.getCollection('labels_comments').find({'labels':{$elemMatch:{$elemMatch:{$in:['person']}}}})
-
-
 with open('/etc/hostname','r') as f:
     hostname = f.read().strip()
-
 if __name__=='__main__':
     app.run(host=hostname, port=8880)"""
 
@@ -76,6 +66,8 @@ import logging
 import pickle
 from PIL import Image as im 
 import json
+import threading
+import time
 
 with open("api_config.yaml") as yaml_file:
    config_dict = yaml.load(yaml_file)["config_dictionary"]
@@ -154,16 +146,41 @@ def profile(index):
         return redirect(url_for('login'))
     user='test'
     if index == 'mooncake':
-        return render_template("my_response.html", data="mooncake",
+        return render_template("my_response.html", data="mooncake", info = [0,0,0,0,0],
         next_pic=f"mooncake",
         previous_pic=f"mooncake",
         user=user)
     index = int(index)
-    name = user_history[user][index]
-    return render_template("my_response.html", data=name,
+	#name = user_history[user][index]
+    photo_date = user_history[user][index]
+    return render_template("my_response.html", data=photo_date[0], info=photo_date[1],
         next_pic=f"{(index-1)%len(user_history[user])}",
         previous_pic=f"{(index+1)%len(user_history[user])}",
         user=user)
+
+def get_info(founded, text):
+	#TODO wybiera tylko jednen pasujacy element ze zdj
+
+	#catched - wszystkie obiekty na zdj
+	catched = founded["labels"]
+	info = [-1,-1,-1,-1,"not_found"]
+	for i in catched:
+		#i[:4] tagi zaczynaja sie od 5 elementu
+		if text in i[4:]:
+			info = i
+	return info
+			
+def get_photos(text, found, user):
+	text_data={}
+	for i in found[:20]:
+		photo = pickle.loads(collection_photos.find_one({"id":i['id']})['photo'])
+		photo = im.fromarray(photo)
+		b, g, r = photo.split()
+		photo = im.merge("RGB", (r, g, b))
+		photo.save(f'static/images/{i["id"]}.png')
+		#user_history[user].append(i["id"])
+		info = get_info(i, text)
+		user_history[user].append([i["id"],info])
 
 @app.route('/goto/<user>', methods=['POST', 'GET'])    
 def goto(user):
@@ -175,13 +192,9 @@ def goto(user):
     labels = [x.strip() for x in text.split(',')]
     found = [*collection_labels.find({'labels':{"$elemMatch":{"$elemMatch":{"$in":labels}}}})]
     print(found)
-    for i in found:
-        photo = pickle.loads(collection_photos.find_one({"id":i['id']})['photo'])
-        photo = im.fromarray(photo)
-        b, g, r = photo.split()
-        photo = im.merge("RGB", (r, g, b))
-        photo.save(f'static/images/{i["id"]}.png')
-        user_history[user].append(i["id"])
+    t = threading.Thread(target=get_photos, args=(text, found, user,))
+    t.start()
+    time.sleep(3)
     return redirect(f'/find_by_tag/0',)
 
 with open('/etc/hostname','r') as f:

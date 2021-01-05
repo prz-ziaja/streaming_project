@@ -25,7 +25,21 @@
 
   <div class="row">
     <div class="col-md-6">
-      <img src="{{ url_for('static', filename='images/'+data+'.png') }}" class="img-responsive center-block" alt="">
+      <img id="scream" src="{{ url_for('static', filename='images/'+data+'.png') }}" class="img-responsive center-block" alt="">
+	
+	<canvas id="myCanvas" width={{ info[2] }} height={{ info[3] }}></canvas>
+	<script>
+		window.onload = function() {
+		  var c=document.getElementById("myCanvas");
+		  var ctx=c.getContext("2d");
+		  var img=document.getElementById("scream");  
+		  ctx.drawImage(img,-{{ info[0] }},-{{ info[1] }});  
+		  var canvas = document.getElementById('myCanvas');
+		  var context = canvas.getContext('2d');
+
+		}
+	</script>
+
     </div>
 
     <div class="col-md-6">
