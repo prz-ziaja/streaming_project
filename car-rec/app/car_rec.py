@@ -148,8 +148,8 @@ collection_export = db[config_dict['collection_labels']]
 
 for event in consumer:
    data = event.value
-   id, timestamp = pickle.loads(data)
+   id, timestamp, url = pickle.loads(data)
    record = collection_import.find_one({'id':id})
    image = pickle.loads(record['photo'])
    labels = car_rec(image)
-   collection_export.insert({'id':id,'timestamp':timestamp,"labels":labels,"comments":[]})
+   collection_export.insert({'id':id,'timestamp':timestamp,'url':url,"labels":labels,"comments":[]})

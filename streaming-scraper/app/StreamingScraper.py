@@ -10,17 +10,33 @@ import pafy
 import pymongo
 import numpy as np
 import sys
+import threading
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+def cam_init(_url):
+    try:
+        if 'youtu' in _url:
+            vPafy = pafy.new(_url)
+            print('ok1')
+            play = vPafy.getbest(preftype='mp4')
+            print('ok2')
+            vidcap = cv2.VideoCapture(play.url)
+            print('ok3')
+        else:
+            vidcap = cv2.VideoCapture(_url)
+    except Exception as e:
+        logging.error(f"Problem occured during establishing connection to camera\n{e.args}")
+        return None
+    
+    return vidcap
+
 
 #time.sleep(30)
 class StreamingScraper(object):
     def __init__(self):
         with open("scraper_config.yaml") as yaml_file:
             config_dict = yaml.load(yaml_file)["config_dictionary"]
-
-        self._url = config_dict["url"]
-        self.cam_init()
 
         self.db = pymongo.MongoClient(
                     'mongo1:27017',
@@ -37,36 +53,54 @@ class StreamingScraper(object):
         self.sample_period = 1/config_dict['sample_freq_Hz']
         self.producer = KafkaProducer(bootstrap_servers=['kafka:9093'])  
     
-    def cam_init(self):
-        try:
-            if 'youtu' in self._url:
-                self.vPafy = pafy.new(self._url)
-                self.play = self.vPafy.getbest(preftype='mp4')
-                self.vidcap = cv2.VideoCapture(self.play.url)
-            else:
-                self.vidcap = cv2.VideoCapture(self._url)
-        except Exception as e:
-            logging.error(f"Problem occured during establishing connection to camera\n{e.args}")
-            sys.exit(1)
 
-    def start(self):
+    def start(self,_url,lock,threads):
         capture_time = time.time()
-        while True:
+        while _url in threads:
             if capture_time<time.time():
                 timestamp = round(time.time(),2)
-                self.cam_init()
-                success,image = self.vidcap.read()
+                vidcap = cam_init(_url)
+                if vidcap is None:
+                    logging.error(f"can not establish connection {_url}")
+                    continue
+                success,image = vidcap.read()
                 if success:
                     image = cv2.resize(image, (1280,720))
                     id = str(int(timestamp))+f'_{np.random.randint(999):0=3d}'
-                    msg = pickle.dumps((id,timestamp))
-                    self.collection.insert({'id':id,'timestamp':timestamp,'photo':pickle.dumps(image)})
-                    self.producer.send('topictest', msg)
-                    logging.info('Frame captured and sent')
+                    msg = pickle.dumps((id,timestamp,_url))
+                    with lock:
+                        self.collection.insert({'id':id,'timestamp':timestamp,'photo':pickle.dumps(image)})
+                        self.producer.send('topictest', msg)
+                    logging.info(f'Frame captured and sent {id} from {_url}')
                 capture_time=self.sample_period+time.time()
+            time.sleep(0.5)
+    
+    def start_manager(self):
+        lock = threading.Lock()
+        settings = self.db["app_settings"]
+        threads = {}
+        while True:
+            links = [*settings.find()]
+            urls = [i["url"] for i in links]
+            for i in threads:
+                if i not in urls:
+                    temp = threads[i]
+                    del(threads[i])
+                    temp.join()
+            
+            for i in urls:
+                if i not in threads:
+                    threads[i] = threading.Thread(target=self.start,args=(i,lock,threads))
+                    threads[i].start()
+            time.sleep(10)
+
+
+
+
+        
 
 
 
 if __name__ == "__main__":
     streaming_scraper = StreamingScraper()
-    streaming_scraper.start()
+    streaming_scraper.start_manager()

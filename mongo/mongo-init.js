@@ -35,3 +35,10 @@ db.createCollection( 'photos',
       autoIndexId: true,
     }
  );
+ db.createCollection( 'app_settings',
+ { 
+   autoIndexId: true,
+ }
+);
+
+db.app_settings.insertOne({"url": "https://youtu.be/1EiC9bvVGnk","tag":"YT junction"});
