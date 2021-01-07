@@ -4,6 +4,40 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
+from pager import Pager
+import os
+import pymongo
+import sys
+import yaml
+import logging
+import pickle
+from PIL import Image as im 
+import json
+import threading
+import time
+
+# Make connection to MongoDB with photo data
+with open("api_config.yaml") as yaml_file:
+   config_dict = yaml.load(yaml_file)["config_dictionary"]
+
+db = pymongo.MongoClient(
+            'mongo1:27017',
+            username=config_dict['mongo_user'],
+            password=config_dict['mongo_password'],
+            authSource=config_dict['mongo_database'],
+            authMechanism='SCRAM-SHA-256')[config_dict['mongo_database']]
+try:
+    db.list_collections()
+except Exception as e:
+    logging.error(f"Problem with connection to MongoDB\n{e.args}")
+    sys.exit(2)
+
+collection_photos = db[config_dict['collection_photos']]
+collection_labels = db[config_dict['collection_labels']]
+
+user_history = {}
+
+
 
 app = Flask(__name__)
 
@@ -124,7 +158,62 @@ def profile():
         return render_template('profile.html', account=account)
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
+	
+@app.route('/pythonlogin/find_by_tag/<index>')
+def browser(index):
+	# We need user
+	cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+	cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
+	account = cursor.fetchone()
+	user = account['username']
+	index = int(index)
+	photo_date = user_history[user][index]
+	return render_template("browser.html", data=photo_date[0], all_info=photo_date[1],
+        next_pic=f"{(index+1)%len(user_history[user])}",
+        previous_pic=f"{(index-1)%len(user_history[user])}")
 
+def get_info(founded, text):
+	#TODO wybiera tylko jednen pasujacy element ze zdj
+
+	#catched - wszystkie obiekty na zdj
+	catched = founded["labels"]
+	info = []
+	for i in catched:
+		#i[:4] tagi zaczynaja sie od 5 elementu
+		if text in i[4:]:
+			info.append(i)
+	return info
+			
+def get_photos(text, found, user):
+	text_data={}
+	for i in found[:20]:
+		photo = pickle.loads(collection_photos.find_one({"id":i['id']})['photo'])
+		photo = im.fromarray(photo)
+		b, g, r = photo.split()
+		photo = im.merge("RGB", (r, g, b))
+		photo.save(f'static/images/{i["id"]}.png')
+		#user_history[user].append(i["id"])
+		info = get_info(i, text)
+		user_history[user].append([i["id"],info])
+
+@app.route('/goto', methods=['POST', 'GET'])  
+def goto():
+	# We need user
+	cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+	cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
+	account = cursor.fetchone()
+	user = account['username']
+
+	user_history[user]=[]
+	text = request.form['index']
+
+	labels = [x.strip() for x in text.split(',')]
+	found = [*collection_labels.find({'labels':{"$elemMatch":{"$elemMatch":{"$in":labels}}}})]
+
+	t = threading.Thread(target=get_photos, args=(text, found, user,))
+	t.start()
+	time.sleep(2)
+	return redirect('/pythonlogin/find_by_tag/0')
 
 if __name__ == '__main__':
     with open('/etc/hostname', 'r') as f:

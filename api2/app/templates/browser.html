@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+
+{% block content %}
+
+<form class="search" role="search" name="goto" action="/goto" method="POST">
+  <input type="text" name="index" class="form-control" placeholder="Find by tag">
+	<button type="Go"><i class="fa fa-search"></i> Find</button>
+	<a href="/pythonlogin/find_by_tag/{{ previous_pic }}" class="button" role="button">
+  <i class="fas fa-arrow-alt-circle-left"></i> Previus
+	</a>
+	<a href="/pythonlogin/find_by_tag/{{ next_pic }}" class="button" role="button">
+  <i class="fas fa-arrow-alt-circle-right"></i></i> Next
+	</a>
+</form>
+
+<div>
+<h2>{{ all_info|length }} objects founded on image:</h2>
+<img id="main" src="{{ url_for('static', filename='images/'+data+'.png') }}" class="main_img" alt="">
+</div>
+{% for info in all_info %}
+	<div>
+	<h2>Details</h2>
+	<br>
+	<table >
+				<tr>
+					<td><b>Object:</b></td>
+					<td>{{ info[4]|capitalize }}</td>
+				</tr>
+				{% if info|length > 5 %}
+					<tr>
+						<td><b>Brand:</b></td>
+						<td>{{ info[5] }}</td>
+					</tr>
+					<tr>
+						<td><b>Model:</b></td>
+						<td>{{ info[6] }}</td>
+					</tr>
+				{% endif %}
+				<tr>
+					<td><b>Name in database:</b></td>
+					<td>{{ data|capitalize }}</td>
+				</tr>
+	 </table>	
+	<br>	
+	<h2>Szczegóły położenia obiektu na obrazie.</h2>
+	<br>
+	<table >
+				<tr>
+					<td><b>X coordinate:</b></td>
+					<td>{{ info[0] }} pixel</td>
+				</tr>
+				<tr>
+					<td><b>Y coordinate:</b></td>
+					<td>{{ info[1] }} pixel</td>
+				</tr>
+				<tr>
+					<td><b>Width:</b></td>
+					<td>{{ info[2] }} pixeli</td>
+				</tr>
+				<tr>
+					<td><b>Height:</b></td>
+					<td>{{ info[3] }} pixeli</td>
+				</tr>	
+	 </table>
+	<h2>Photo of object</h2>
+	<br>
+		<canvas id={{ info[0] }} width={{ info[2] }} height={{ info[3] }} class="part_img"></canvas>
+	</div>
+{% endfor %}
+
+{% for info in all_info %}
+<script>
+		var img = new Image();
+		img.src = "{{ url_for('static', filename='images/'+data+'.png') }}";
+		img.onload = function() {
+			var c=document.getElementById({{ info[0] }});
+			var ctx=c.getContext("2d");
+			ctx.drawImage(img,-{{ info[0] }},-{{ info[1] }}); 
+		}
+	</script>
+{% endfor %}
+
+<div>
+<canvas id="sec" width="950" height="800" class="sec_img"></canvas>
+<script>
+		var img = new Image();
+		img.src = "{{ url_for('static', filename='images/'+data+'.png') }}";
+		img.onload = function() {
+			var c=document.getElementById("sec");
+			var ctx=c.getContext("2d");
+			ctx.drawImage(img, 0, 0, img.width*0.7, img.height * 0.7); 
+		}
+	</script>
+</div>
+{% endblock %}

@@ -113,6 +113,8 @@ body {
 .navtop div a:hover {
   	color: #eaebed;
 }
+
+
 body.loggedin {
   	background-color: #f3f4f7;
 }
