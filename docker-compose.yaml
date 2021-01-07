@@ -99,7 +99,22 @@ services:
                 restart: always
                 networks: 
                         - my_network
-                        
+
+        prometheus:
+                container_name: prometheus
+                image: prom/prometheus:v2.1.0
+                depends_on:
+                        - api2
+                command: --config.file=/etc/prometheus/prometheus.yaml
+                volumes:
+                        - ./prometheus:/etc/prometheus/
+                tty: true
+                restart: always
+                ports:
+                        - 9090:9090
+                networks: 
+                        - my_network
+
         mongo1:
                 container_name: mongo1
                 image: mongo:4.4.2-bionic

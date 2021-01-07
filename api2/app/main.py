@@ -3,9 +3,15 @@ import re
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 app = Flask(__name__)
+
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version='1.0.3')
+
+
 
 # Change this to your secret key (can be anything, it's for extra protection)
 app.secret_key = 'your secret key'
@@ -23,6 +29,8 @@ mysql = MySQL(app)
 # http://localhost:5000/pythonlogin/ - this will be the login page, we need to use both GET and POST requests
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/pythonlogin/', methods=['GET', 'POST'])
+@metrics.counter('invocation_by_type', 'Number of invocations by type',
+         labels={'item_type': lambda: request.view_args['type']})
 def login():
     # Output message if something goes wrong...
     msg = ''
