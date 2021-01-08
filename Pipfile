@@ -15,6 +15,7 @@ opencv-python = "*"
 requests = "*"
 pyyaml = "*"
 tensorflow = "*"
+selenium = "*"
 
 [requires]
 python_version = "3.8"
