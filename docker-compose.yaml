@@ -88,11 +88,11 @@ services:
                 container_name: car-recognizer
                 build:
                         dockerfile: Dockerfile
-                        context: ./car-rec
+                        context: car_recognizer
                 depends_on:
                         - kafka
                 volumes:
-                        - ./car-rec/app:/app/
+                        - ./car_recognizer/app:/app/
                 tty: true
                 working_dir: /app/
                 command: python3 car_rec.py
