@@ -170,6 +170,9 @@ def browser(index):
     account = cursor.fetchone()
     user = account['username']
     index = int(index)
+    #case no pictures found
+    if not user_history[user]:
+        return redirect(url_for('home'))
     photo_date = user_history[user][index]
     return render_template("browser.html", data=photo_date[0], all_info=photo_date[1],
                            next_pic=f"{(index + 1) % len(user_history[user])}",
@@ -219,6 +222,24 @@ def goto():
     t.start()
     time.sleep(2)
     return redirect('/pythonlogin/find_by_tag/0')
+
+@app.route('/add_stream', methods=['POST', 'GET'])
+def add_stream():
+    # We need user
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
+    account = cursor.fetchone()
+    user = account['username']
+
+    text = request.form['index']
+
+    record = {"url":text,"user":user,"inserted":int(time.time())}
+    try:
+        db["app_settings"].insert_one(record)
+        logging.info(f"{user} has added url {text} to db")
+    except:
+        logging.error(f"Unsuccessful insertion of {text} for user {user}")
+    return redirect('/pythonlogin/profile')
 
 
 if __name__ == '__main__':

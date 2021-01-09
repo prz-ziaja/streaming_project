@@ -38,6 +38,7 @@ services:
                         context: ./api2
                 depends_on:
                         - mysql-db
+                        - mongo1
                 ports:
                         - 80:80
                 tty: true
@@ -73,6 +74,7 @@ services:
                         context: car_recognizer
                 depends_on:
                         - kafka
+                        - streaming-scraper
                 volumes:
                         - ./car_recognizer/app:/app/
                 tty: true
