@@ -9,6 +9,8 @@ from PIL import Image, ImageOps
 import cv2
 import io
 import config
+import os
+
 
 model_file = config.model_file
 label_file = config.label_file
@@ -16,11 +18,13 @@ input_layer = config.input_layer
 output_layer = config.output_layer
 classifier_input_size = config.classifier_input_size
 
+path_of_script = os.path.dirname(os.path.realpath(__file__))
+
 def load_graph(model_file):
   graph = tf.Graph()
   graph_def = tf.GraphDef()
-
-  with open(model_file, "rb") as f:
+  to_open = os.path.join(path_of_script,model_file)
+  with open(to_open, "rb") as f:
     graph_def.ParseFromString(f.read())
   with graph.as_default():
     tf.import_graph_def(graph_def)
@@ -29,7 +33,8 @@ def load_graph(model_file):
 
 def load_labels(label_file):
     label = []
-    with open(label_file, "r", encoding='cp1251') as ins:
+    to_open = os.path.join(path_of_script, label_file)
+    with open(to_open, "r", encoding='cp1251') as ins:
         for line in ins:
             label.append(line.rstrip())
 
@@ -78,7 +83,6 @@ def resizeAndPad(img, size, padColor=0):
 class Classifier():
     def __init__(self):
         # uncomment the next 3 lines if you want to use CPU instead of GPU
-        import os
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -117,3 +121,4 @@ class Classifier():
             make_model = self.labels[ix].split('\t')
             classes.append({"make": make_model[0], "model": make_model[1], "prob": str(results[ix])})
         return(classes)
+

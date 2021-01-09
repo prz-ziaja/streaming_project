@@ -3,10 +3,12 @@ import sys
 import cv2
 import os
 
-my_path = os.path.abspath(os.getcwd())
-sys.path.append(my_path)
-sys.path.append(my_path+'/car_recognizer/app')
+my_path = os.path.dirname(os.path.realpath(__file__))
+path_to_streaming_project = os.path.dirname(my_path)
+sys.path.append(path_to_streaming_project)
+sys.path.append(os.path.join(path_to_streaming_project,'car_recognizer','app'))
 
+print(sys.path)
 from car_recognizer.app.car_rec import *
 
 #from car-rec.app.car_rec import car_rec
