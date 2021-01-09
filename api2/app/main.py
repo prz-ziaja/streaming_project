@@ -235,8 +235,11 @@ def add_stream():
     account = cursor.fetchone()
     user = account['username']
 
-    text = request.form['index']
-
+    text = request.form['index'].strip()
+    print(db["app_settings"].find({"url":text}))
+    if [*db["app_settings"].find({"url":text})]:
+        print('not added')
+        return redirect('/pythonlogin/profile')
     record = {"url":text,"user":user,"inserted":int(time.time())}
     try:
         db["app_settings"].insert_one(record)

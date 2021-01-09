@@ -8,7 +8,6 @@ path_to_streaming_project = os.path.dirname(my_path)
 sys.path.append(path_to_streaming_project)
 sys.path.append(os.path.join(path_to_streaming_project,'car_recognizer','app'))
 
-print(sys.path)
 from car_recognizer.app.car_rec import *
 
 #from car-rec.app.car_rec import car_rec
@@ -19,7 +18,6 @@ img_3 = os.path.join(my_path,"101.jpeg")
 image1 = cv2.imread(img_1)
 image2 = cv2.imread(img_2)
 image3 = cv2.imread(img_3)
-
 
 class MyTest(unittest.TestCase):
 
