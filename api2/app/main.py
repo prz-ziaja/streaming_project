@@ -21,6 +21,10 @@ import time
 with open("api_config.yaml") as yaml_file:
     config_dict = yaml.load(yaml_file)["config_dictionary"]
 
+for i in os.listdir('static/images'):
+    if 'png' in i:
+        os.system(f"rm static/images/{i}")
+
 db = pymongo.MongoClient(
     'mongo1:27017',
     username=config_dict['mongo_user'],

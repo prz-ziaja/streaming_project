@@ -1,7 +1,11 @@
 import unittest
 import sys
 import cv2
+import os
 
+my_path = os.path.abspath(os.getcwd())
+sys.path.append(my_path)
+sys.path.append(my_path+'/car_recognizer/app')
 
 from car_recognizer.app.car_rec import *
 
