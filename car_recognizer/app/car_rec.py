@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-# import os
+import os
 # from tabulate import tabulate
 import classifier
 from PIL import Image
@@ -16,13 +16,15 @@ import yaml
 time.sleep(10)
 print('--------------------------------------')
 
+path_of_script = os.path.dirname(os.path.realpath(__file__))
+
 def car_rec(image,confidence=0.5,threshold=0.3):
 
    car_color_classifier = classifier.Classifier()
 
-   labelsPath = ("coco.names")
-   weightsPath = ("yolov3.weights")
-   configPath = ("yolov3.cfg")
+   labelsPath = (os.path.join(path_of_script,"coco.names"))
+   weightsPath = (os.path.join(path_of_script,"yolov3.weights"))
+   configPath = (os.path.join(path_of_script,"yolov3.cfg"))
    LABELS = open(labelsPath).read().strip().split("\n")
 
    # load our YOLO object detector trained on COCO dataset (80 classes)
