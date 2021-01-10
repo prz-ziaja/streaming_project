@@ -20,6 +20,18 @@ url_agh = "http://live.uci.agh.edu.pl/video/stream3.cgi?"
 number = np.random.randint(100000)
 
 class MyTest(unittest.TestCase):
+    def setUp(self):
+        mongo_up_command = ("docker-compose -f " +  
+            os.path.join(path_to_streaming_project,
+            'docker-compose.yaml') +
+            " up -d mongo1 kafka")
+
+        os.system("docker stop mongo1 kafka zookeeper")
+        os.system("docker rm mongo1 kafka zookeeper")
+        os.system(mongo_up_command)
+
+        time.sleep(5)
+
     def testing_01_yt_cam_init(self):
         res = cam_init(url_yt)
         self.assertEqual(res.isOpened(),True)
@@ -101,19 +113,10 @@ class MyTest(unittest.TestCase):
             init_without_errors = False
         self.assertEqual(init_without_errors,True)
 
+    def tearDown(self):
+        os.system("docker stop mongo1 kafka zookeeper")
+        os.system("docker rm mongo1 kafka zookeeper")
 
 if __name__ == '__main__':
-    mongo_up_command = ("docker-compose -f " +  
-        os.path.join(path_to_streaming_project,
-        'docker-compose.yaml') +
-        " up -d mongo1 kafka")
-
-    os.system("docker stop mongo1 kafka zookeeper")
-    os.system("docker rm mongo1 kafka zookeeper")
-    os.system(mongo_up_command)
-
-    time.sleep(5)
     unittest.main()
 
-    os.system("docker stop mongo1 kafka zookeeper")
-    os.system("docker rm mongo1 kafka zookeeper")
