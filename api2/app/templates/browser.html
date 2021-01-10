@@ -83,16 +83,5 @@
 	</script>
 {% endfor %}
 
-<div>
-<canvas id="sec" width="950" height="800" class="sec_img"></canvas>
-<script>
-		var img = new Image();
-		img.src = "{{ url_for('static', filename='images/'+data+'.png') }}";
-		img.onload = function() {
-			var c=document.getElementById("sec");
-			var ctx=c.getContext("2d");
-			ctx.drawImage(img, 0, 0, img.width*0.7, img.height * 0.7); 
-		}
-	</script>
-</div>
+
 {% endblock %}

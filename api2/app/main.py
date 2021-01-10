@@ -183,19 +183,19 @@ def browser(index):
                            previous_pic=f"{(index - 1) % len(user_history[user])}")
 
 
-def get_info(founded, text):
+def get_info(founded, labels):
     # TODO wybiera tylko jednen pasujacy element ze zdj
     # catched - wszystkie obiekty na zdj
     catched = founded["labels"]
     info = []
     for i in catched:
         # i[:4] tagi zaczynaja sie od 5 elementu
-        if text in i[4:]:
+        if set(labels)&set(i[4:]):
             info.append(i)
     return info
 
 
-def get_photos(text, found, user):
+def get_photos(labels, found, user):
     text_data = {}
     for i in found[:20]:
         photo = pickle.loads(collection_photos.find_one({"id": i['id']})['photo'])
@@ -204,7 +204,7 @@ def get_photos(text, found, user):
         photo = im.merge("RGB", (r, g, b))
         photo.save(f'static/images/{i["id"]}.png')
         # user_history[user].append(i["id"])
-        info = get_info(i, text)
+        info = get_info(i, labels)
         user_history[user].append([i["id"], info])
 
 
@@ -219,10 +219,12 @@ def goto():
     user_history[user] = []
     text = request.form['index']
 
-    labels = [x.strip() for x in text.split(',')]
+    labels = [x.strip().lower() for x in text.split(',')]
+    big_labels = [x[0].upper()+x[1:] for x in labels]
+    labels = list(set(labels+big_labels))
     found = [*collection_labels.find({'labels': {"$elemMatch": {"$elemMatch": {"$in": labels}}}})]
 
-    t = threading.Thread(target=get_photos, args=(text, found, user,))
+    t = threading.Thread(target=get_photos, args=(labels, found, user))
     t.start()
     time.sleep(2)
     return redirect('/pythonlogin/find_by_tag/0')

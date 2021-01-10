@@ -11,8 +11,28 @@ import pymongo
 import numpy as np
 import sys
 import threading
+import os 
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+path_of_script = os.path.dirname(os.path.realpath(__file__))
+config_file = os.path.join(path_of_script,"scraper_config.yaml")
+with open(config_file) as yaml_file:
+    config_dict = yaml.load(yaml_file)["config_dictionary"]
+
+
+def init_mongo(mongo_location):
+    db = pymongo.MongoClient(
+                mongo_location,
+                username=config_dict['mongo_user'],
+                password=config_dict['mongo_password'],
+                authSource=config_dict['mongo_database'],
+                authMechanism='SCRAM-SHA-256')[config_dict['mongo_database']]
+    
+    return db
+
+def init_kafka(kafka_location):
+    return KafkaProducer(bootstrap_servers=[kafka_location])
 
 def cam_init(_url):
     try:
@@ -43,19 +63,9 @@ def test_connection(_url):
 
     return "passed"
 
-
-#time.sleep(30)
 class StreamingScraper(object):
-    def __init__(self):
-        with open("scraper_config.yaml") as yaml_file:
-            config_dict = yaml.load(yaml_file)["config_dictionary"]
-
-        self.db = pymongo.MongoClient(
-                    'mongo1:27017',
-                    username=config_dict['mongo_user'],
-                    password=config_dict['mongo_password'],
-                    authSource=config_dict['mongo_database'],
-                    authMechanism='SCRAM-SHA-256')[config_dict['mongo_database']]
+    def __init__(self,mongo_location="mongo1:27017",kafka_location='kafka:9093'):
+        self.db = init_mongo(mongo_location)
         try:
             self.db.list_collections()
         except Exception as e:
@@ -63,7 +73,7 @@ class StreamingScraper(object):
             sys.exit(2)
         self.collection = self.db[config_dict['collection']]
         self.sample_period = 1/config_dict['sample_freq_Hz']
-        self.producer = KafkaProducer(bootstrap_servers=['kafka:9093'])  
+        self.producer = init_kafka(kafka_location)
     
 
     def start(self,_url,lock,threads):
