@@ -14,3 +14,5 @@ You can check progress by executing:
 ```
 docker logs --follow face-recognizer
 ```
+
+
