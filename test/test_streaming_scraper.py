@@ -19,7 +19,7 @@ url_yt = "https://youtu.be/1EiC9bvVGnk"
 url_agh = "http://live.uci.agh.edu.pl/video/stream3.cgi?"
 number = np.random.randint(100000)
 
-class MyTest(unittest.TestCase):
+class StreamingScraperTest(unittest.TestCase):
     def setUp(self):
         mongo_up_command = ("docker-compose -f " +  
             os.path.join(path_to_streaming_project,
