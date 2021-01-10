@@ -12,9 +12,9 @@ from car_recognizer.app.car_rec import *
 
 #from car-rec.app.car_rec import car_rec
 
-img_1 = os.path.join(my_path,"104.jpeg")
-img_2 = os.path.join(my_path,"103.jpeg")
-img_3 = os.path.join(my_path,"101.jpeg")
+img_1 = os.path.join(my_path, "test_car_recognizer_images/104.jpeg")
+img_2 = os.path.join(my_path, "test_car_recognizer_images/103.jpeg")
+img_3 = os.path.join(my_path, "test_car_recognizer_images/101.jpeg")
 image1 = cv2.imread(img_1)
 image2 = cv2.imread(img_2)
 image3 = cv2.imread(img_3)
