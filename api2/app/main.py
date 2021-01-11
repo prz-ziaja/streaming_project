@@ -178,36 +178,39 @@ def browser(index):
     if not user_history[user]:
         return redirect(url_for('home'))
     photo_date = user_history[user][index]
+    #Render a browser with image
     return render_template("browser.html", data=photo_date[0], all_info=photo_date[1],
                            next_pic=f"{(index + 1) % len(user_history[user])}",
                            previous_pic=f"{(index - 1) % len(user_history[user])}")
 
-
+# Function for choose only matching elements form photo
 def get_info(founded, labels):
-    # TODO wybiera tylko jednen pasujacy element ze zdj
-    # catched - wszystkie obiekty na zdj
+    #Catched - all object in the photo
     catched = founded["labels"]
     info = []
     for i in catched:
         # i[:4] tagi zaczynaja sie od 5 elementu
         if set(labels)&set(i[4:]):
             info.append(i)
+    #Returns a list of elements in the photo, that link to the tag         
     return info
 
-
+# Function for save matching images
 def get_photos(labels, found, user):
     text_data = {}
     for i in found[:20]:
+        #Saving photo form database
         photo = pickle.loads(collection_photos.find_one({"id": i['id']})['photo'])
         photo = im.fromarray(photo)
         b, g, r = photo.split()
         photo = im.merge("RGB", (r, g, b))
         photo.save(f'static/images/{i["id"]}.png')
-        # user_history[user].append(i["id"])
+        #We need info about all matching elements in the photo
         info = get_info(i, labels)
         user_history[user].append([i["id"], info])
 
 
+# http://localhost/goto - Inizialize the acquisition of photos and redirect to /pythonlogin/find_by_tag/0
 @app.route('/goto', methods=['POST', 'GET'])
 def goto():
     # We need user
@@ -218,15 +221,19 @@ def goto():
 
     user_history[user] = []
     text = request.form['index']
-
+    # Colects all matching information from database
     labels = [x.strip().lower() for x in text.split(',')]
     big_labels = [x[0].upper()+x[1:] for x in labels]
     labels = list(set(labels+big_labels))
     found = [*collection_labels.find({'labels': {"$elemMatch": {"$elemMatch": {"$in": labels}}}})]
-
-    t = threading.Thread(target=get_photos, args=(labels, found, user))
-    t.start()
+    # Starts the thread which supports saving images
+    try:
+        t = threading.Thread(target=get_photos, args=(labels, found, user))
+        t.start()
+    except:
+        logging.error(f"Unsuccessful initialization of downloading photos")
     time.sleep(2)
+    #Redirect to first matching element
     return redirect('/pythonlogin/find_by_tag/0')
 
 @app.route('/add_stream', methods=['POST', 'GET'])

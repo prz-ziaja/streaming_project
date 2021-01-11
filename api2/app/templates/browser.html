@@ -17,9 +17,45 @@
 </form>
 
 <div>
-<h2>{{ all_info|length }} objects founded on image:</h2>
+<h2>Photo founded</h2>
+<br>
+	<table >
+				<tr>
+					<td><b>Photo id:</b></td>
+					<td>{{ data }}</td>
+				</tr>
+	 </table>
 <img id="main" src="{{ url_for('static', filename='images/'+data+'.png') }}" class="main_img" alt="">
 </div>
+
+<div>
+<h2>{{ all_info|length }} objects founded on image:</h2>
+<canvas id="sec" width="950" height="534" class="sec_img"></canvas>
+</div>
+
+{% for info in all_info %}
+<script>	
+		var flag = 0;
+		var img = new Image();
+		img.onload = function() {
+			if( flag == 0){
+				var c=document.getElementById("sec");
+				var ctx=c.getContext("2d");
+				var scale=(950/img.width)
+				ctx.drawImage(img, 0, 0, img.width*scale, img.height*scale); 
+				flag =1;
+			}
+			var sec=document.getElementById("sec");
+			var context=sec.getContext("2d");
+			var scale=(950/img.width)
+			context.lineWidth = "3";
+			context.strokeStyle = "hsl(" + Math.random() * 360 + ", 100%, 75%)";
+			context.strokeRect({{ info[0] }}*scale, {{ info[1] }}*scale , {{ info[2] }}*scale, {{ info[3] }}*scale);
+		}
+		img.src = "{{ url_for('static', filename='images/'+data+'.png') }}";
+	</script>
+{% endfor %}
+
 {% for info in all_info %}
 	<div>
 	<h2>Details</h2>
@@ -39,12 +75,9 @@
 						<td>{{ info[6] }}</td>
 					</tr>
 				{% endif %}
-				<tr>
-					<td><b>Name in database:</b></td>
-					<td>{{ data|capitalize }}</td>
-				</tr>
+
 	 </table>	
-	<br>	
+
 	<h2>Szczegóły położenia obiektu na obrazie.</h2>
 	<br>
 	<table >
@@ -70,7 +103,6 @@
 		<canvas id={{ info[0] }} width={{ info[2] }} height={{ info[3] }} class="part_img"></canvas>
 	</div>
 {% endfor %}
-
 {% for info in all_info %}
 <script>
 		var img = new Image();
@@ -78,10 +110,11 @@
 		img.onload = function() {
 			var c=document.getElementById({{ info[0] }});
 			var ctx=c.getContext("2d");
-			ctx.drawImage(img,-{{ info[0] }},-{{ info[1] }}); 
+			ctx.drawImage(img,-{{ info[0] }},-{{ info[1] }});
 		}
 	</script>
 {% endfor %}
+
 
 
 {% endblock %}
